@@ -111,10 +111,22 @@ pub trait CalendarDurationExt: Sized + Ord + Copy {
 /// in English.
 #[derive(Debug, Clone)]
 pub struct CalendarDuration {
-    years: u32,
-    months: u8,
-    days: u8,
-    order: Ordering,
+    /// Number of whole years of duration.
+    pub years: u32,
+
+    /// Number of whole months in addition to the [`years`](Self::years).
+    pub months: u8,
+
+    /// Number of whole days in addition to the [`months`](Self::months) and
+    /// [`years`](Self::years).
+    pub days: u8,
+
+    /// Indicates whether the duration is forwards or backwards in time.
+    ///
+    /// [`Ordering::Greater`] means the duration is into the past, and [`Ordering::Less`] means the
+    /// duration is into the future. [`Ordering::Equal`] means the duration is less than one full
+    /// day, and all other fields must be zero.
+    pub order: Ordering,
 }
 
 impl std::fmt::Display for CalendarDuration {
