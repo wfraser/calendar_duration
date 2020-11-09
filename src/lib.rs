@@ -268,12 +268,26 @@ mod chrono_tests {
     }
 
     #[test]
-    fn not_all_months_are_31_days() {
-        assert_eq!("2 months ago",
+    fn straddle_30_days_month() {
+        assert_eq!("2 months",
             NaiveDate::from_ymd(2000, 7, 31)
                 .calendar_duration_from(
                     NaiveDate::from_ymd(2000, 5, 31))
                 .to_string());
+    }
+
+    #[test]
+    fn not_all_months_are_31_days() {
+        let start = NaiveDate::from_ymd(2000, 8, 31);
+        let mut earlier = NaiveDate::from_ymd(2000, 6, 30);
+
+        assert_eq!("2 months, 1 day", start.calendar_duration_from(earlier).to_string());
+
+        // Next day goes to 2000-07-01 because June has 30 days.
+        earlier = earlier.succ();
+
+        // So we never get exactly "2 months".
+        assert_eq!("1 month, 30 days", start.calendar_duration_from(earlier).to_string());
     }
 }
 
@@ -317,11 +331,25 @@ mod time_tests {
     }
 
     #[test]
-    fn not_all_months_are_31_days() {
-        assert_eq!("2 months ago",
+    fn straddle_30_days_month() {
+        assert_eq!("2 months",
             time::date!(2000-07-31)
                 .calendar_duration_from(
                     time::date!(2000-05-31))
                 .to_string());
+    }
+
+    #[test]
+    fn not_all_months_are_31_days() {
+        let start = time::date!(2000-08-31);
+        let mut earlier = time::date!(2000-06-30);
+
+        assert_eq!("2 months, 1 day", start.calendar_duration_from(earlier).to_string());
+
+        // Next day goes to 2000-07-01 because June has 30 days.
+        earlier = earlier.succ();
+
+        // So we never get exactly "2 months".
+        assert_eq!("1 month, 30 days", start.calendar_duration_from(earlier).to_string());
     }
 }
