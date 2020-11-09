@@ -195,6 +195,68 @@ mod chrono_impl {
         }
     }
 
+    #[cfg(test)]
+    mod test {
+        use super::*;
+
+        #[test]
+        fn it_works() {
+            let a = NaiveDate::from_ymd(2020, 4, 8);
+            let b = NaiveDate::from_ymd(1988, 6, 16);
+            let c = a.calendar_duration_from(b);
+            assert_eq!(c.to_string(), "31 years, 9 months, 23 days");
+        }
+
+        #[test]
+        fn same() {
+            assert_eq!("same day",
+                NaiveDate::from_ymd(1999, 12, 31)
+                    .calendar_duration_from(
+                        NaiveDate::from_ymd(1999, 12, 31))
+                    .to_string());
+        }
+
+        #[test]
+        fn leapyear1() {
+            assert_eq!("1 year",
+                NaiveDate::from_ymd(2005, 3, 1)
+                    .calendar_duration_from(
+                        NaiveDate::from_ymd(2004, 2, 29))
+                    .to_string());
+        }
+
+        #[test]
+        fn leapyear2() {
+            assert_eq!("1 year",
+                NaiveDate::from_ymd(2005, 3, 1)
+                    .calendar_duration_from(
+                        NaiveDate::from_ymd(2004, 3, 1))
+                    .to_string());
+        }
+
+        #[test]
+        fn straddle_30_days_month() {
+            assert_eq!("2 months",
+                NaiveDate::from_ymd(2000, 7, 31)
+                    .calendar_duration_from(
+                        NaiveDate::from_ymd(2000, 5, 31))
+                    .to_string());
+        }
+
+        #[test]
+        fn not_all_months_are_31_days() {
+            let start = NaiveDate::from_ymd(2000, 8, 31);
+            let mut earlier = NaiveDate::from_ymd(2000, 6, 30);
+
+            assert_eq!("2 months, 1 day", start.calendar_duration_from(earlier).to_string());
+
+            // Next day goes to 2000-07-01 because June has 30 days.
+            earlier = earlier.succ();
+
+            // So we never get exactly "2 months".
+            assert_eq!("1 month, 30 days", start.calendar_duration_from(earlier).to_string());
+        }
+    }
 }
 
 #[cfg(feature = "time")]
@@ -215,131 +277,67 @@ mod time_impl {
             self.next_day()
         }
     }
-}
 
-#[cfg(all(feature = "chrono", test))]
-mod chrono_tests {
-    use super::*;
-    use chrono::NaiveDate;
+    #[cfg(test)]
+    mod test {
+        use super::*;
 
-    #[test]
-    fn it_works() {
-        let a = NaiveDate::from_ymd(2020, 4, 8);
-        let b = NaiveDate::from_ymd(1988, 6, 16);
-        let c = a.calendar_duration_from(b);
-        assert_eq!(c.to_string(), "31 years, 9 months, 23 days");
-    }
+        #[test]
+        fn it_works() {
+            let a = time::date!(2020-04-08);
+            let b = time::date!(1988-06-16);
+            let c = a.calendar_duration_from(b);
+            assert_eq!(c.to_string(), "31 years, 9 months, 23 days");
+        }
 
-    #[test]
-    fn same() {
-        assert_eq!("same day",
-            NaiveDate::from_ymd(1999, 12, 31)
-                .calendar_duration_from(
-                    NaiveDate::from_ymd(1999, 12, 31))
-                .to_string());
-    }
+        #[test]
+        fn same() {
+            assert_eq!("same day",
+                time::date!(1999-12-31)
+                    .calendar_duration_from(
+                        time::date!(1999-12-31))
+                    .to_string());
+        }
 
-    #[test]
-    fn leapyear1() {
-        assert_eq!("1 year",
-            NaiveDate::from_ymd(2005, 3, 1)
-                .calendar_duration_from(
-                    NaiveDate::from_ymd(2004, 2, 29))
-                .to_string());
-    }
-    
-    #[test]
-    fn leapyear2() {
-        assert_eq!("1 year",
-            NaiveDate::from_ymd(2005, 3, 1)
-                .calendar_duration_from(
-                    NaiveDate::from_ymd(2004, 3, 1))
-                .to_string());
-    }
+        #[test]
+        fn leapyear1() {
+            assert_eq!("1 year",
+                time::date!(2005-03-01)
+                    .calendar_duration_from(
+                        time::date!(2004-02-29))
+                    .to_string());
+        }
 
-    #[test]
-    fn straddle_30_days_month() {
-        assert_eq!("2 months",
-            NaiveDate::from_ymd(2000, 7, 31)
-                .calendar_duration_from(
-                    NaiveDate::from_ymd(2000, 5, 31))
-                .to_string());
-    }
+        #[test]
+        fn leapyear2() {
+            assert_eq!("1 year",
+                time::date!(2005-03-01)
+                    .calendar_duration_from(
+                        time::date!(2004-03-01))
+                    .to_string());
+        }
 
-    #[test]
-    fn not_all_months_are_31_days() {
-        let start = NaiveDate::from_ymd(2000, 8, 31);
-        let mut earlier = NaiveDate::from_ymd(2000, 6, 30);
+        #[test]
+        fn straddle_30_days_month() {
+            assert_eq!("2 months",
+                time::date!(2000-07-31)
+                    .calendar_duration_from(
+                        time::date!(2000-05-31))
+                    .to_string());
+        }
 
-        assert_eq!("2 months, 1 day", start.calendar_duration_from(earlier).to_string());
+        #[test]
+        fn not_all_months_are_31_days() {
+            let start = time::date!(2000-08-31);
+            let mut earlier = time::date!(2000-06-30);
 
-        // Next day goes to 2000-07-01 because June has 30 days.
-        earlier = earlier.succ();
+            assert_eq!("2 months, 1 day", start.calendar_duration_from(earlier).to_string());
 
-        // So we never get exactly "2 months".
-        assert_eq!("1 month, 30 days", start.calendar_duration_from(earlier).to_string());
-    }
-}
+            // Next day goes to 2000-07-01 because June has 30 days.
+            earlier = earlier.succ();
 
-#[cfg(all(feature = "time", test))]
-mod time_tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let a = time::date!(2020-04-08);
-        let b = time::date!(1988-06-16);
-        let c = a.calendar_duration_from(b);
-        assert_eq!(c.to_string(), "31 years, 9 months, 23 days");
-    }
-
-    #[test]
-    fn same() {
-        assert_eq!("same day",
-            time::date!(1999-12-31)
-                .calendar_duration_from(
-                    time::date!(1999-12-31))
-                .to_string());
-    }
-
-    #[test]
-    fn leapyear1() {
-        assert_eq!("1 year",
-            time::date!(2005-03-01)
-                .calendar_duration_from(
-                    time::date!(2004-02-29))
-                .to_string());
-    }
-    
-    #[test]
-    fn leapyear2() {
-        assert_eq!("1 year",
-            time::date!(2005-03-01)
-                .calendar_duration_from(
-                    time::date!(2004-03-01))
-                .to_string());
-    }
-
-    #[test]
-    fn straddle_30_days_month() {
-        assert_eq!("2 months",
-            time::date!(2000-07-31)
-                .calendar_duration_from(
-                    time::date!(2000-05-31))
-                .to_string());
-    }
-
-    #[test]
-    fn not_all_months_are_31_days() {
-        let start = time::date!(2000-08-31);
-        let mut earlier = time::date!(2000-06-30);
-
-        assert_eq!("2 months, 1 day", start.calendar_duration_from(earlier).to_string());
-
-        // Next day goes to 2000-07-01 because June has 30 days.
-        earlier = earlier.succ();
-
-        // So we never get exactly "2 months".
-        assert_eq!("1 month, 30 days", start.calendar_duration_from(earlier).to_string());
+            // So we never get exactly "2 months".
+            assert_eq!("1 month, 30 days", start.calendar_duration_from(earlier).to_string());
+        }
     }
 }
