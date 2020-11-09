@@ -12,8 +12,6 @@
 //!   - [`chrono::NaiveDate`] which can be enabled by compiling with the `chrono` feature.
 //!   - [`time::Date`] which can be enabled by compiling with the `time` feature.
 
-use std::cmp::Ordering;
-
 /// Extension trait to allow computing a "calendar duration" from two dates.
 /// 
 /// See [`CalendarDuration`] for more info.
@@ -57,8 +55,6 @@ pub trait CalendarDurationExt: Sized + Ord + Copy {
             (other, self)
         };
 
-        let order = self.cmp(&other);
-
         let (mut y, mut m, d) = earlier.ymd();
         let mut years = 0u32;
         loop {
@@ -97,15 +93,14 @@ pub trait CalendarDurationExt: Sized + Ord + Copy {
             earlier = earlier.succ();
         }
 
-        CalendarDuration { order, years, months, days }
+        CalendarDuration { years, months, days }
     }
 }
 
 /// A calendar duration is a duration which takes into account the calendar dates involved. See the
 /// [module level documentation](crate) for more info.
 ///
-/// Calendar duration includes the number of years, months, and days, and an Ordering indicating
-/// whether the difference is in the future or the past.
+/// Calendar duration includes the number of years, months, and days.
 ///
 /// It includes a [`Display`](std::fmt::Display) implementation which formats the duration nicely
 /// in English.
@@ -120,13 +115,6 @@ pub struct CalendarDuration {
     /// Number of whole days in addition to the [`months`](Self::months) and
     /// [`years`](Self::years).
     pub days: u8,
-
-    /// Indicates whether the duration is forwards or backwards in time.
-    ///
-    /// [`Ordering::Greater`] means the duration is into the past, and [`Ordering::Less`] means the
-    /// duration is into the future. [`Ordering::Equal`] means the duration is less than one full
-    /// day, and all other fields must be zero.
-    pub order: Ordering,
 }
 
 impl std::fmt::Display for CalendarDuration {
@@ -165,17 +153,7 @@ impl std::fmt::Display for CalendarDuration {
             any = true;
         }
 
-        if any {
-            match self.order {
-                Ordering::Greater => {
-                    f.write_str(" ago")?;
-                }
-                Ordering::Less => {
-                    f.write_str(" to go")?;
-                }
-                Ordering::Equal => panic!("unexpected equal ordering with nonzero duration"),
-            }
-        } else {
+        if !any {
             f.write_str("same day")?
         }
 
@@ -237,7 +215,7 @@ mod chrono_tests {
         let a = NaiveDate::from_ymd(2020, 4, 8);
         let b = NaiveDate::from_ymd(1988, 6, 16);
         let c = a.calendar_duration_from(b);
-        assert_eq!(c.to_string(), "31 years, 9 months, 23 days ago");
+        assert_eq!(c.to_string(), "31 years, 9 months, 23 days");
     }
 
     #[test]
@@ -251,7 +229,7 @@ mod chrono_tests {
 
     #[test]
     fn leapyear1() {
-        assert_eq!("1 year ago",
+        assert_eq!("1 year",
             NaiveDate::from_ymd(2005, 3, 1)
                 .calendar_duration_from(
                     NaiveDate::from_ymd(2004, 2, 29))
@@ -260,7 +238,7 @@ mod chrono_tests {
     
     #[test]
     fn leapyear2() {
-        assert_eq!("1 year ago",
+        assert_eq!("1 year",
             NaiveDate::from_ymd(2005, 3, 1)
                 .calendar_duration_from(
                     NaiveDate::from_ymd(2004, 3, 1))
@@ -300,7 +278,7 @@ mod time_tests {
         let a = time::date!(2020-04-08);
         let b = time::date!(1988-06-16);
         let c = a.calendar_duration_from(b);
-        assert_eq!(c.to_string(), "31 years, 9 months, 23 days ago");
+        assert_eq!(c.to_string(), "31 years, 9 months, 23 days");
     }
 
     #[test]
@@ -314,7 +292,7 @@ mod time_tests {
 
     #[test]
     fn leapyear1() {
-        assert_eq!("1 year ago",
+        assert_eq!("1 year",
             time::date!(2005-03-01)
                 .calendar_duration_from(
                     time::date!(2004-02-29))
@@ -323,7 +301,7 @@ mod time_tests {
     
     #[test]
     fn leapyear2() {
-        assert_eq!("1 year ago",
+        assert_eq!("1 year",
             time::date!(2005-03-01)
                 .calendar_duration_from(
                     time::date!(2004-03-01))
