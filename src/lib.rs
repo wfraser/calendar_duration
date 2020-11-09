@@ -4,13 +4,25 @@
 //!
 //! A calendar duration is a duration which takes into account the specific calendar dates
 //! involved. This recognizes that not all months have the same number of days, so saying "one
-//! month ago" can mean a different date depending of which date it's in reference to. The same
-//! goes for years: some years have 365 days, but some have 366, and so "4 years ago" can mean a
-//! different date depending on which years those are.
+//! month ago" means a different amount of absolute time depending of which date it's in reference
+//! to, and may not even be a well-defined date. The same goes for years: some years have 365 days,
+//! but some have 366, and so "4 years ago" may not have a well-defined meaning, depending on which
+//! years those are.
+//!
+//! Note that this crate is only concerned with whole days. It does not account for leap-seconds or
+//! timezone changes, and so the trait is only implemented for date-like types, not date-time ones.
 //!
 //! This crate comes with implementations for two types:
 //!   - [`chrono::NaiveDate`] which can be enabled by compiling with the `chrono` feature.
 //!   - [`time::Date`] which can be enabled by compiling with the `time` feature.
+//!
+//! By default, neither is enabled, and because of Rust's prohibition on implementations of foreign
+//! traits for foreign types, the trait by itself is not useful without one of these
+//! implementations. So you'll need to use it in your Crates.toml as
+//! ```cargo
+//! calendar_duration = { version = "$current_version_here", features = ["chrono"] }
+//! ```
+//! (or `features = ["time"]` if you're using that crate.)
 
 /// Extension trait to allow computing a "calendar duration" from two dates.
 /// 
