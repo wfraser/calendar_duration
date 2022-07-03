@@ -243,7 +243,6 @@ mod chrono_impl {
 
     impl CalendarDurationExt for chrono::NaiveDate {
         fn ymd(self) -> (i32, u8, u8) {
-            use std::convert::TryFrom;
             (self.year(),
                 u8::try_from(self.month()).expect("month out of bounds"),
                 u8::try_from(self.day()).expect("day out of bounds"))
@@ -274,15 +273,16 @@ mod time_impl {
 
     impl CalendarDurationExt for time::Date {
         fn ymd(self) -> (i32, u8, u8) {
-            self.as_ymd()
+            let (y, m, d) = self.to_calendar_date();
+            (y, m as u8, d)
         }
 
         fn from_ymd(y: i32, m: u8, d: u8) -> Option<Self> {
-            Date::try_from_ymd(y, m, d).ok()
+            Date::from_calendar_date(y, time::Month::try_from(m).ok()?, d).ok()
         }
 
         fn succ(self) -> Self {
-            self.next_day()
+            self.next_day().expect("cannot increment max date")
         }
     }
 
@@ -290,6 +290,9 @@ mod time_impl {
     mod test {
         use super::*;
 
-        tests!(|y, m, d| Date::try_from_ymd(y, m, d).expect("failed to construct Date"));
+        tests!(|y, m, d| {
+            let month = time::Month::try_from(m).expect("invalid month");
+            Date::from_calendar_date(y, month, d).expect("failed to construct Date")
+        });
     }
 }
