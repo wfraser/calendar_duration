@@ -50,8 +50,7 @@ pub trait CalendarDurationExt: Sized + Ord + Copy {
                         }
                         Self::from_ymd(y, m, 30).unwrap()
                     }
-                    _ => panic!("constructing a date for ({},{},{}) failed for unknown reason",
-                            y, m, d),
+                    _ => panic!("constructing a date for ({y},{m},{d}) failed for unknown reason"),
                 }
             })
     }
@@ -253,7 +252,7 @@ mod chrono_impl {
         }
 
         fn succ(self) -> Self {
-            NaiveDate::succ(&self)
+            NaiveDate::succ_opt(&self).expect("date out of range")
         }
     }
 
