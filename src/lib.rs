@@ -40,7 +40,7 @@ pub trait CalendarDurationExt: Sized + Ord + Copy {
         Self::from_ymd(y, m, d)
             .unwrap_or_else(|| {
                 match (m, d) {
-                    (2, 29) => Self::from_ymd(y, 3, 1).unwrap(),
+                    (2, 29) | (2, 30) | (2, 31) => Self::from_ymd(y, 3, 1).unwrap(),
                     (_, 31) => {
                         if m == 12 {
                             m = 1;
@@ -231,6 +231,26 @@ macro_rules! tests {
 
             // So we never get exactly "2 months".
             assert_eq!("1 month, 30 days", start.calendar_duration_from(earlier).to_string());
+        }
+
+        #[test]
+        fn test_feb30() {
+            let mut start = $ctor(2024, 12, 29);
+            let later = $ctor(2025, 3, 15);
+
+            assert_eq!("2 months, 14 days", start.calendar_duration_from(later).to_string());
+
+            start = start.succ(); // 2024-12-30
+            assert_eq!("2 months, 14 days", start.calendar_duration_from(later).to_string());
+
+            start = start.succ(); // 2024-12-31
+            assert_eq!("2 months, 14 days", start.calendar_duration_from(later).to_string());
+
+            start = start.succ(); // 2025-01-01
+            assert_eq!("2 months, 14 days", start.calendar_duration_from(later).to_string());
+
+            start = start.succ(); // 2025-01-02
+            assert_eq!("2 months, 13 days", start.calendar_duration_from(later).to_string());
         }
     }
 }

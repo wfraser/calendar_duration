@@ -1,6 +1,6 @@
 [package]
 name = "calendar_duration"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["William R. Fraser <wfraser@codewise.org>"]
 edition = "2021"
 
